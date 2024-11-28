@@ -1,0 +1,5 @@
+flask
+numpy
+faiss-cpu
+PyMuPDF
+requests
