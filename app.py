@@ -114,7 +114,7 @@ def upload_pdf_and_ask():
     question_embedding = get_embeddings(question)
     D, I = index.search(np.array(question_embedding).astype('float32').reshape(1,-1), 1)  
     best_match = document_chunks[I[0][0]] if I[0][0] < len(document_chunks) else ""
-    system_message = "You are a helpful assistant that answers questions based on the provided document."
+    system_message = "You are a helpful assistant that answers questions to the point based on the provided document."
     user_message = f"Question: {question}\nContext: {best_match}"
     answer = get_custom_model_answer(system_message, user_message, TOKEN)
     return jsonify({"answer": answer})
