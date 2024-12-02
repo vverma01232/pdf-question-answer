@@ -67,7 +67,6 @@ def event_generator(system_message, user_message, token, streaming):
   
 # Method to interact with model
 def get_custom_model_answer(system_message, user_message, token, streaming):
-    print(streaming)
     headers = {
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {token}'
@@ -139,6 +138,8 @@ def upload_pdf_and_ask():
     
     # Get the "streaming" flag from the request (True or False)
     streaming = request.form.get("streaming")
+    if not streaming:
+        return jsonify({"error": "Missing streaming flag"}), 400
 
     file_path = "uploaded.pdf"
     file.save(file_path)
