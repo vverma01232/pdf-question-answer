@@ -61,7 +61,7 @@ def event_generator(system_message, user_message, token, streaming):
     """This generator handles the event stream and yields data."""
     try:
         for chunk in get_custom_model_answer(system_message, user_message, token, streaming):
-            yield f"data: {chunk}\n\n"
+            yield f"{chunk}\n\n"
     except Exception as e:
         yield f"data: Error - {str(e)}\n\n"
   
@@ -170,7 +170,7 @@ def upload_pdf_and_ask():
     if streaming == 'false':
         try:
              return Response(event_generator(system_message, user_message, TOKEN, streaming=False),
-                        content_type='text/event-stream;charset=utf-8', status=200)
+                        content_type='application/json', status=200)
         except Exception as e:
             print(f"Error: {e}")
             return jsonify({"error": str(e)})
