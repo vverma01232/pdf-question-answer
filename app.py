@@ -3,21 +3,23 @@ import os
 import fitz  
 import numpy as np
 import requests
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response  
 import faiss
+from dotenv import load_dotenv
 
+
+load_dotenv()
 
 app = Flask(__name__)
 
-# Variables to be use in the process
+# Variables to be used in the process
 MODEL_URL = os.getenv("MODEL_URL")
-EMBEDDING_MODEL_URL= os.getenv("EMBEDDING_MODEL_URL")
-TOKEN=os.getenv("TOKEN")
+EMBEDDING_MODEL_URL = os.getenv("EMBEDDING_MODEL_URL")
+TOKEN = os.getenv("TOKEN")
 embedding_dim = 768
 index = faiss.IndexFlatL2(embedding_dim)
 document_chunks = []
 
-# Method to extract text from PDF
 def extract_text_from_pdf(pdf_path):
     doc = fitz.open(pdf_path)
     text = ''
@@ -70,7 +72,7 @@ def get_custom_model_answer(system_message, user_message, token):
         ],
         "max_tokens": 5000,
         "temperature": 0.7,
-        "stream": False
+        "stream": True  
     }
 
     def sanitize_input(input_text):
@@ -79,15 +81,17 @@ def get_custom_model_answer(system_message, user_message, token):
     user_message = sanitize_input(user_message)
 
     try:
-        response = requests.post(MODEL_URL, headers=headers, data=json.dumps(payload))
-        response.raise_for_status()  
+        response = requests.post(MODEL_URL, headers=headers, data=json.dumps(payload), stream=True)
         
         if response.status_code != 200:
             print(f"Error Response: {response.text}")
             return f"Error: {response.status_code}, {response.text}"
-    
-        return response.json()
-    
+
+        # If you're using streaming, yield chunks of data
+        for chunk in response.iter_lines():
+            if chunk:
+                yield chunk.decode('utf-8')  
+        
     except requests.exceptions.RequestException as e:
         print(f"Error while making the API call: {e}")
         return f"Error: {e}"
@@ -95,7 +99,6 @@ def get_custom_model_answer(system_message, user_message, token):
 # Route to upload Pdf and ask
 @app.route('/upload_pdf_and_ask', methods=['POST'])
 def upload_pdf_and_ask():
-    
     if 'file' not in request.files:
         return jsonify({"error": "Missing file"}), 400
     file = request.files['file']
@@ -116,8 +119,8 @@ def upload_pdf_and_ask():
     best_match = document_chunks[I[0][0]] if I[0][0] < len(document_chunks) else ""
     system_message = "You are a helpful assistant that answers questions to the point based on the provided document."
     user_message = f"Question: {question}\nContext: {best_match}"
-    answer = get_custom_model_answer(system_message, user_message, TOKEN)
-    return jsonify({"answer": answer})
+    os.remove(file_path)
+    return Response(get_custom_model_answer(system_message, user_message, TOKEN), content_type='application/json;charset=utf-8', status=200)
 
 # Run the Flask app
 if __name__ == '__main__':
