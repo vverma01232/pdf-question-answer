@@ -4,3 +4,4 @@ faiss-cpu
 PyMuPDF
 requests
 python-dotenv
+flask-cors
