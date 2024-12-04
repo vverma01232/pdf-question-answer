@@ -5,12 +5,14 @@ import numpy as np
 import requests
 from flask import Flask, request, jsonify, Response
 import faiss
+from flask_cors import CORS
 from dotenv import load_dotenv
 
 
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Variables to be used in the process
 MODEL_URL = os.getenv("MODEL_URL")
