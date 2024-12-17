@@ -5,3 +5,9 @@ PyMuPDF
 requests
 python-dotenv
 flask-cors
+pgvector
+langchain
+psycopg
+pytesseract
+psycopg[binary]
+Pillow
